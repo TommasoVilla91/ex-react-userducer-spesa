@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 
 const products = [
     { name: 'Mela', price: 0.5 },
@@ -9,40 +9,40 @@ const products = [
 
 function ProductList() {
 
-    const [addedProducts, setAddedProducts] = useState([])
+    // BONUS 2 (corretto guardando correzione)
+    const [addedProducts, dispatch] = useReducer(reducer, [])
 
-    function addToCart(p) {
-        const addedProduct = addedProducts.find(currProd => currProd.name === p.name);
-        if(addedProduct) {
-            updateProductQuantity(addedProduct.name, addedProduct.quantity + 1);
-            return;
-        }
-        setAddedProducts(kartProd => {
-            return [...kartProd, {...p, quantity: 1}];
-        });
-    };
+    function reducer(addedProducts, action) {
 
-    function updateProductQuantity(name, quantity) {
-        if(quantity < 1 || isNaN(quantity)) {
-            return;
-        }
+        switch(action.type) {
+            case "ADD_ITEM":
+                const addedProduct = addedProducts.find(currProd => currProd.name === action.payload.name);
+                    if(addedProduct) {
+                        action.payload.quantity = addedProduct.quantity + 1;
+                    } else {
+                        return [...addedProducts, {...action.payload, quantity: 1}];
+                    }
 
-        setAddedProducts(kartProd => 
-            kartProd.map(currProd => {
-    
-                if (currProd.name === name) {
-                    return { ...currProd, quantity};
-                };
-    
-                return currProd;
-            })
-        );
-    };
+            case "UPDATE_QUANTITY":            
+                if(action.payload.quantity < 1 || isNaN(action.payload.quantity)) {
+                    return addedProducts;
+                }        
+                return addedProducts.map(currProd => {
+            
+                        if (currProd.name === action.payload.name) {
+                            return { ...currProd, quantity: action.payload.quantity};
+                        };
+            
+                        return currProd;
+                })
 
-    function removeFromCart(i) {
-        // scorre l'array del carrello e mi ritorna un array con tutti gli elementi con indice diverso da quello passato
-        setAddedProducts(kartProd => kartProd.filter((currProd, index) => index !== i));
-    };
+            case "REMOVE_ITEM":
+                return addedProducts.filter((currProd, index) => index !== action.payload);
+                
+            default:
+                return state;
+        };
+    };    
 
     return (
         <div>
@@ -52,7 +52,7 @@ function ProductList() {
                     <div key={i}>
                         <h3>{p.name}</h3>
                         <p>prezzo: {p.price}</p>
-                        <button onClick={() => addToCart(p)}>Aggiungi al carrello</button>
+                        <button onClick={() => dispatch({type: "ADD_ITEM", payload: p})}>Aggiungi al carrello</button>
                     </div>
                 ))}
             </section>
@@ -69,10 +69,13 @@ function ProductList() {
                                 <input 
                                     type="number" 
                                     value={addP.quantity} 
-                                    onChange={(event) => updateProductQuantity(addP.name, parseInt(event.target.value))}
+                                    onChange={(event) => dispatch({
+                                        type: "UPDATE_QUANTITY", 
+                                        payload: {name: addP.name, quantity: parseInt(event.target.value)}
+                                    })}
                                 />
                             </div>
-                            <button onClick={() => removeFromCart(i)}>Rimuovi al carrello</button>
+                            <button onClick={() => dispatch({type: "REMOVE_ITEM", payload: i})}>Rimuovi al carrello</button>
                         </div>
                     ))}
                 </div>
