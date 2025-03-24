@@ -12,33 +12,31 @@ function ProductList() {
     const [addedProducts, setAddedProducts] = useState([])
 
     function addToCart(p) {
+        const addedProduct = addedProducts.find(currProd => currProd.name === p.name);
+        if(addedProduct) {
+            updateProductQuantity(addedProduct.name, addedProduct.quantity + 1);
+            return;
+        }
         setAddedProducts(kartProd => {
-            // check se prodotto c'è nel carrello
-            const isAdded = kartProd.some(currProd => currProd.name === p.name);
-
-            // se non c'è
-            if (!isAdded) {
-                // aggiunge oggetto
-                return [...kartProd, { ...p, quantity: 1 }];
-
-                // altrimenti se c'è
-            } else {
-                // aumento quantità 
-                function updateProductQuantity() {
-                    // scorro prodotti
-                    const checkProd = kartProd.map(currProd => {
-                        // se ce n'è 1 uguale
-                        if (currProd.name === p.name) {
-                            // aumenta la quantità solo di quell'oggetto
-                            const addQuantity = currProd.quantity++;
-                            return { ...p, quantity: addQuantity };
-                        };
-                    });
-                    return checkProd;
-                };
-                return updateProductQuantity();
-            };
+            return [...kartProd, {...p, quantity: 1}];
         });
+    };
+
+    function updateProductQuantity(name, quantity) {
+        if(quantity < 1 || isNaN(quantity)) {
+            return;
+        }
+
+        setAddedProducts(kartProd => 
+            kartProd.map(currProd => {
+    
+                if (currProd.name === name) {
+                    return { ...currProd, quantity};
+                };
+    
+                return currProd;
+            })
+        );
     };
 
     function removeFromCart(i) {
@@ -66,7 +64,14 @@ function ProductList() {
                         <div key={i}>
                             <h5>{addP.name}</h5>
                             <p>prezzo: {addP.price}</p>
-                            <p>quantita: {addP.quantity}</p>
+                            <div>
+                                <label>quantita: </label>
+                                <input 
+                                    type="number" 
+                                    value={addP.quantity} 
+                                    onChange={(event) => updateProductQuantity(addP.name, parseInt(event.target.value))}
+                                />
+                            </div>
                             <button onClick={() => removeFromCart(i)}>Rimuovi al carrello</button>
                         </div>
                     ))}
